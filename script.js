@@ -1,0 +1,348 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const loginForm = document.querySelector('.form-box.login form');
+  const registerForm = document.querySelector('.form-box.register form');
+  const container = document.querySelector('.container');
+  const registerLink = document.querySelector('.register-link');
+  const loginLink = document.querySelector('.login-link');
+  const planSelect = document.getElementById('planSelect');
+  const planCost = document.getElementById('planCost');
+
+  // Plan prices
+  const planPrices = {
+    basic: '₹299/month',
+    premium: '₹599/month',
+    elite: '₹899/month',
+    family: '₹1199/month',
+  };
+
+  // Toggle between login and register forms
+  registerLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    container.classList.add('active');
+  });
+
+  loginLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    container.classList.remove('active');
+  });
+
+  // Plan selection handler
+  planSelect.addEventListener('change', function () {
+    const selectedPlan = this.value;
+    if (planPrices[selectedPlan]) {
+      planCost.textContent = planPrices[selectedPlan];
+      hideError(this);
+    } else {
+      planCost.textContent = '';
+      showError(this, 'Please select a plan');
+    }
+  });
+
+  // Validation functions
+  function isValidEmail(email) {
+    const regex = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
+    return regex.test(email);
+  }
+
+  function isValidMobile(mobile) {
+    return /^\d{10}$/.test(mobile);
+  }
+
+  function isValidPassword(password) {
+    return password.length >= 8;
+  }
+
+  function isValidName(name) {
+    return name.trim().length > 0;
+  }
+
+  function isValidDateOfBirth(dob) {
+    const regex = /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/;
+    if (!regex.test(dob)) return false;
+
+    // Parse the date
+    const parts = dob.split('-');
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const year = parseInt(parts[2], 10);
+    const date = new Date(year, month, day);
+
+    // Check if date is valid
+    if (
+      date.getFullYear() !== year ||
+      date.getMonth() !== month ||
+      date.getDate() !== day
+    ) {
+      return false;
+    }
+
+    // Age validation (10-120 years)
+    const today = new Date();
+    let age = today.getFullYear() - year;
+    const monthDiff = today.getMonth() - month;
+
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < day)) {
+      age--;
+    }
+
+    return age >= 10 && age <= 120;
+  }
+
+  // Error handling functions
+  function showError(inputElement, message) {
+    const errorElement = document.getElementById(`${inputElement.id}Error`);
+    if (errorElement) {
+      errorElement.textContent = message;
+      errorElement.style.display = 'block';
+      inputElement.parentElement.classList.add('error');
+    }
+  }
+
+  function hideError(inputElement) {
+    const errorElement = document.getElementById(`${inputElement.id}Error`);
+    if (errorElement) {
+      errorElement.textContent = '';
+      errorElement.style.display = 'none';
+      inputElement.parentElement.classList.remove('error');
+    }
+  }
+
+  function validateField(inputElement, validationFn, errorMessage) {
+    const value = inputElement.value.trim();
+    if (!value) {
+      showError(inputElement, 'This field is required');
+      return false;
+    }
+    if (validationFn && !validationFn(value)) {
+      showError(inputElement, errorMessage);
+      return false;
+    }
+    hideError(inputElement);
+    return true;
+  }
+
+  // Setup field validation with real-time checking
+  function setupFieldValidation(form) {
+    const inputs = form.querySelectorAll('input, select');
+
+    inputs.forEach((input) => {
+      // Validate on blur
+      input.addEventListener('blur', () => {
+        if (input.required) {
+          validateField(input);
+        }
+      });
+
+      // Real-time validation while typing
+      input.addEventListener('input', () => {
+        if (input.value.trim()) {
+          if (input.id === 'mobile') {
+            validateField(
+              input,
+              isValidMobile,
+              'Mobile number must be 10 digits'
+            );
+          } else if (
+            input.id === 'loginEmail' ||
+            input.id === 'registerEmail'
+          ) {
+            validateField(
+              input,
+              isValidEmail,
+              'Please enter a valid email address'
+            );
+          } else if (
+            input.id === 'loginPassword' ||
+            input.id === 'registerPassword'
+          ) {
+            validateField(
+              input,
+              isValidPassword,
+              'Password must be at least 8 characters'
+            );
+          } else if (input.id === 'firstName' || input.id === 'lastName') {
+            validateField(input, isValidName, 'This field is required');
+          } else if (input.id === 'dob') {
+            validateField(
+              input,
+              isValidDateOfBirth,
+              'Please enter a valid date of birth (DD-MM-YYYY)'
+            );
+          } else if (input.id === 'confirmPassword') {
+            const password = document.getElementById('registerPassword');
+            if (input.value !== password.value) {
+              showError(input, 'Passwords do not match');
+            } else {
+              hideError(input);
+            }
+          } else if (input.required) {
+            validateField(input);
+          }
+        } else {
+          hideError(input);
+        }
+      });
+    });
+  }
+
+  // Mobile number real-time validation
+  document.getElementById('mobile').addEventListener('input', function (e) {
+    const mobile = e.target;
+    mobile.value = mobile.value.replace(/\D/g, '').substring(0, 10);
+
+    if (mobile.value.length > 0) {
+      validateField(mobile, isValidMobile, 'Mobile number must be 10 digits');
+    } else {
+      hideError(mobile);
+    }
+  });
+
+  // Real-time password confirmation validation
+  document
+    .getElementById('registerPassword')
+    .addEventListener('input', function () {
+      const confirmPassword = document.getElementById('confirmPassword');
+      if (confirmPassword.value) {
+        if (confirmPassword.value !== this.value) {
+          showError(confirmPassword, 'Passwords do not match');
+        } else {
+          hideError(confirmPassword);
+        }
+      }
+    });
+
+  document
+    .getElementById('confirmPassword')
+    .addEventListener('input', function () {
+      const password = document.getElementById('registerPassword');
+      if (this.value !== password.value) {
+        showError(this, 'Passwords do not match');
+      } else {
+        hideError(this);
+      }
+    });
+
+  // Date of Birth real-time validation and formatting
+  document.getElementById('dob').addEventListener('input', function (e) {
+    let input = e.target.value.replace(/\D/g, '');
+    if (input.length > 8) input = input.substr(0, 8);
+
+    let formatted = '';
+    for (let i = 0; i < input.length; i++) {
+      if (i === 2 || i === 4) formatted += '-';
+      formatted += input[i];
+    }
+
+    e.target.value = formatted;
+
+    if (formatted.length > 0) {
+      validateField(
+        e.target,
+        isValidDateOfBirth,
+        'Please enter a valid date of birth (DD-MM-YYYY)'
+      );
+    } else {
+      hideError(e.target);
+    }
+  });
+
+  // Setup validation for both forms
+  setupFieldValidation(loginForm);
+  setupFieldValidation(registerForm);
+
+  // Login form submission
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById('loginEmail');
+    const password = document.getElementById('loginPassword');
+
+    let isValid = true;
+
+    if (
+      !validateField(email, isValidEmail, 'Please enter a valid email address')
+    ) {
+      isValid = false;
+    }
+
+    if (
+      !validateField(
+        password,
+        isValidPassword,
+        'Password must be at least 8 characters'
+      )
+    ) {
+      isValid = false;
+    }
+
+    if (isValid) {
+      alert('Login successful!');
+      loginForm.reset();
+    }
+  });
+
+  // Registration form submission
+  registerForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const firstName = document.getElementById('firstName');
+    const lastName = document.getElementById('lastName');
+    const email = document.getElementById('registerEmail');
+    const dob = document.getElementById('dob');
+    const mobile = document.getElementById('mobile');
+    const plan = document.getElementById('planSelect');
+    const password = document.getElementById('registerPassword');
+    const confirmPassword = document.getElementById('confirmPassword');
+
+    let isValid = true;
+
+    // Validate all fields
+    if (!validateField(firstName, isValidName, 'First name is required'))
+      isValid = false;
+    if (!validateField(lastName, isValidName, 'Last name is required'))
+      isValid = false;
+    if (
+      !validateField(email, isValidEmail, 'Please enter a valid email address')
+    )
+      isValid = false;
+    if (
+      !validateField(
+        dob,
+        isValidDateOfBirth,
+        'Please enter a valid date of birth (DD-MM-YYYY)'
+      )
+    )
+      isValid = false;
+    if (
+      !validateField(mobile, isValidMobile, 'Mobile number must be 10 digits')
+    )
+      isValid = false;
+    if (!validateField(plan, null, 'Please select a plan')) isValid = false;
+    if (
+      !validateField(
+        password,
+        isValidPassword,
+        'Password must be at least 8 characters'
+      )
+    )
+      isValid = false;
+
+    // Confirm password validation
+    if (password.value !== confirmPassword.value) {
+      showError(confirmPassword, 'Passwords do not match');
+      isValid = false;
+    } else if (!confirmPassword.value) {
+      showError(confirmPassword, 'Please confirm your password');
+      isValid = false;
+    } else {
+      hideError(confirmPassword);
+    }
+
+    if (isValid) {
+      alert('Registration successful!');
+      registerForm.reset();
+      container.classList.remove('active');
+      planCost.textContent = '';
+    }
+  });
+});
