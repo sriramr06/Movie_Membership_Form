@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // DOM Elements
   const loginForm = document.querySelector('.form-box.login form');
   const registerForm = document.querySelector('.form-box.register form');
   const container = document.querySelector('.container');
@@ -6,6 +7,42 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginLink = document.querySelector('.login-link');
   const planSelect = document.getElementById('planSelect');
   const planCost = document.getElementById('planCost');
+  const clearButton = document.getElementById('clearButton');
+  const popup = document.getElementById('popup');
+  const popupMessage = document.getElementById('popup-message');
+  const popupClose = document.querySelector('.popup-close');
+  const popupButtons = document.getElementById('popup-buttons');
+  const confirmBtn = document.querySelector('.confirm-btn');
+  const cancelBtn = document.querySelector('.cancel-btn');
+
+  // Mobile Responsive Functions
+  function isMobileView() {
+    return window.innerWidth <= 768;
+  }
+
+  function adjustRegisterFormLayout() {
+    const innerRegister = document.querySelector('.inner-register');
+    if (isMobileView()) {
+      innerRegister.style.flexDirection = 'column';
+      document.querySelectorAll('.panel').forEach((panel) => {
+        panel.style.width = '100%';
+      });
+    } else {
+      innerRegister.style.flexDirection = 'row';
+      document.querySelectorAll('.panel').forEach((panel) => {
+        panel.style.width = '48%';
+      });
+    }
+  }
+
+  function updateContainerHeight() {
+    const container = document.querySelector('.container');
+    if (isMobileView() && container.classList.contains('active')) {
+      const registerForm = document.querySelector('.form-box.register');
+      const height = registerForm.scrollHeight + 40;
+      container.style.height = `${height}px`;
+    }
+  }
 
   // Plan prices
   const planPrices = {
@@ -15,18 +52,23 @@ document.addEventListener('DOMContentLoaded', () => {
     family: '₹1199/month',
   };
 
-  // Toggle between login and register forms
+  // Form Toggle with Mobile Support
   registerLink.addEventListener('click', (e) => {
     e.preventDefault();
     container.classList.add('active');
+    setTimeout(updateContainerHeight, 10);
   });
 
   loginLink.addEventListener('click', (e) => {
     e.preventDefault();
     container.classList.remove('active');
+    container.style.height = '';
+    if (isMobileView()) {
+      container.style.height = '540px';
+    }
   });
 
-  // Plan selection handler
+  // Plan Selection Handler
   planSelect.addEventListener('change', function () {
     const selectedPlan = this.value;
     if (planPrices[selectedPlan]) {
@@ -38,7 +80,84 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Validation functions
+  // Password Toggle Functionality
+  function setupPasswordToggle(passwordId, toggleId) {
+    const passwordInput = document.getElementById(passwordId);
+    const toggleIcon = document.getElementById(toggleId);
+
+    toggleIcon.addEventListener('click', function () {
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.innerHTML = '<ion-icon name="eye"></ion-icon>';
+      } else {
+        passwordInput.type = 'password';
+        toggleIcon.innerHTML = '<ion-icon name="eye-off"></ion-icon>';
+      }
+    });
+  }
+
+  setupPasswordToggle('loginPassword', 'toggleLoginPassword');
+  setupPasswordToggle('registerPassword', 'toggleRegisterPassword');
+  setupPasswordToggle('confirmPassword', 'toggleConfirmPassword');
+
+  // Clear Form Functionality
+  clearButton.addEventListener('click', function () {
+    showConfirmationPopup('Are you sure you want to clear the form?', () => {
+      registerForm.reset();
+      planCost.textContent = '';
+
+      const errorMessages = registerForm.querySelectorAll('.error-message');
+      errorMessages.forEach((error) => {
+        error.textContent = '';
+        error.style.display = 'none';
+      });
+
+      const inputBoxes = registerForm.querySelectorAll('.input-box');
+      inputBoxes.forEach((box) => {
+        box.classList.remove('error');
+      });
+    });
+  });
+
+  // Popup System
+  function showPopup(message, type = 'success') {
+    popup.className = 'popup ' + type;
+    popupMessage.textContent = message;
+    popupButtons.style.display = 'none';
+    popup.classList.add('show');
+
+    setTimeout(() => {
+      popup.classList.remove('show');
+    }, 3000);
+  }
+
+  function showConfirmationPopup(message, confirmCallback) {
+    popup.className = 'popup warning';
+    popupMessage.textContent = message;
+    popupButtons.style.display = 'flex';
+    popup.classList.add('show');
+
+    confirmBtn.replaceWith(confirmBtn.cloneNode(true));
+    cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+
+    const newConfirmBtn = document.querySelector('.confirm-btn');
+    const newCancelBtn = document.querySelector('.cancel-btn');
+
+    newConfirmBtn.addEventListener('click', () => {
+      popup.classList.remove('show');
+      confirmCallback();
+    });
+
+    newCancelBtn.addEventListener('click', () => {
+      popup.classList.remove('show');
+    });
+  }
+
+  popupClose.addEventListener('click', () => {
+    popup.classList.remove('show');
+  });
+
+  // Validation Functions
   function isValidEmail(email) {
     const regex = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
     return regex.test(email);
@@ -60,14 +179,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const regex = /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/;
     if (!regex.test(dob)) return false;
 
-    // Parse the date
     const parts = dob.split('-');
     const day = parseInt(parts[0], 10);
     const month = parseInt(parts[1], 10) - 1;
     const year = parseInt(parts[2], 10);
     const date = new Date(year, month, day);
 
-    // Check if date is valid
     if (
       date.getFullYear() !== year ||
       date.getMonth() !== month ||
@@ -76,7 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return false;
     }
 
-    // Age validation (10-120 years)
     const today = new Date();
     let age = today.getFullYear() - year;
     const monthDiff = today.getMonth() - month;
@@ -88,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return age >= 10 && age <= 120;
   }
 
-  // Error handling functions
+  // Error Handling
   function showError(inputElement, message) {
     const errorElement = document.getElementById(`${inputElement.id}Error`);
     if (errorElement) {
@@ -121,19 +237,17 @@ document.addEventListener('DOMContentLoaded', () => {
     return true;
   }
 
-  // Setup field validation with real-time checking
+  // Field Validation Setup
   function setupFieldValidation(form) {
     const inputs = form.querySelectorAll('input, select');
 
     inputs.forEach((input) => {
-      // Validate on blur
       input.addEventListener('blur', () => {
         if (input.required) {
           validateField(input);
         }
       });
 
-      // Real-time validation while typing
       input.addEventListener('input', () => {
         if (input.value.trim()) {
           if (input.id === 'mobile') {
@@ -185,11 +299,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Mobile number real-time validation
+  // Special Field Handlers
   document.getElementById('mobile').addEventListener('input', function (e) {
     const mobile = e.target;
     mobile.value = mobile.value.replace(/\D/g, '').substring(0, 10);
-
     if (mobile.value.length > 0) {
       validateField(mobile, isValidMobile, 'Mobile number must be 10 digits');
     } else {
@@ -197,7 +310,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Real-time password confirmation validation
   document
     .getElementById('registerPassword')
     .addEventListener('input', function () {
@@ -222,7 +334,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-  // Date of Birth real-time validation and formatting
   document.getElementById('dob').addEventListener('input', function (e) {
     let input = e.target.value.replace(/\D/g, '');
     if (input.length > 8) input = input.substr(0, 8);
@@ -234,7 +345,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     e.target.value = formatted;
-
     if (formatted.length > 0) {
       validateField(
         e.target,
@@ -246,25 +356,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Setup validation for both forms
+  // Initialize Validation
   setupFieldValidation(loginForm);
   setupFieldValidation(registerForm);
 
-  // Login form submission
+  // Form Submissions
   loginForm.addEventListener('submit', (e) => {
     e.preventDefault();
-
     const email = document.getElementById('loginEmail');
     const password = document.getElementById('loginPassword');
 
     let isValid = true;
-
     if (
       !validateField(email, isValidEmail, 'Please enter a valid email address')
     ) {
       isValid = false;
     }
-
     if (
       !validateField(
         password,
@@ -276,15 +383,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (isValid) {
-      alert('Login successful!');
+      showPopup('Login successful!');
       loginForm.reset();
     }
   });
 
-  // Registration form submission
   registerForm.addEventListener('submit', (e) => {
     e.preventDefault();
-
     const firstName = document.getElementById('firstName');
     const lastName = document.getElementById('lastName');
     const email = document.getElementById('registerEmail');
@@ -295,8 +400,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmPassword = document.getElementById('confirmPassword');
 
     let isValid = true;
-
-    // Validate all fields
     if (!validateField(firstName, isValidName, 'First name is required'))
       isValid = false;
     if (!validateField(lastName, isValidName, 'Last name is required'))
@@ -317,7 +420,8 @@ document.addEventListener('DOMContentLoaded', () => {
       !validateField(mobile, isValidMobile, 'Mobile number must be 10 digits')
     )
       isValid = false;
-    if (!validateField(plan, null, 'Please select a plan')) isValid = false;
+    if (!validateField(plan, (value) => value !== '', 'Please select a plan'))
+      isValid = false;
     if (
       !validateField(
         password,
@@ -327,7 +431,6 @@ document.addEventListener('DOMContentLoaded', () => {
     )
       isValid = false;
 
-    // Confirm password validation
     if (password.value !== confirmPassword.value) {
       showError(confirmPassword, 'Passwords do not match');
       isValid = false;
@@ -339,10 +442,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (isValid) {
-      alert('Registration successful!');
+      showPopup('Registration successful!');
       registerForm.reset();
       container.classList.remove('active');
+      container.style.height = '';
       planCost.textContent = '';
     }
+  });
+
+  // Initialize Mobile Layout
+  adjustRegisterFormLayout();
+  window.addEventListener('resize', () => {
+    adjustRegisterFormLayout();
+    updateContainerHeight();
   });
 });
