@@ -146,8 +146,8 @@
 
  .input-box label {
    position: absolute;
-   top: 50%;
    left: 5px;
+   top: 30%;
    transform: translateY(-50%);
    font-size: 1em;
    color: black;
@@ -162,11 +162,6 @@
    margin-left: 2px;
  }
 
- .input-box input:focus+label,
- .input-box input:valid+label {
-   top: -5px;
- }
-
  .input-box input {
    position: relative;
    width: 100%;
@@ -177,7 +172,7 @@
    font-size: 1em;
    color: black;
    font-weight: 600;
-   padding: 0 35px 0 5px;
+   padding: 15px 35px 0 5px;
  }
 
  .input-box select {
@@ -400,6 +395,7 @@
    header {
      padding: 15px 20px;
      backdrop-filter: blur(7px);
+     margin-bottom: 100px;
    }
 
    body {
@@ -448,7 +444,8 @@
    .remember-forgot {
      display: flex;
      justify-content: space-around;
-     margin-top: 15px;
+     margin-top: 17px;
+
 
    }
 
@@ -467,6 +464,81 @@
      padding: 15px;
    }
  }
+
+ @media (max-width: 1440px) {
+   header {
+     padding: 15px 20px;
+     backdrop-filter: blur(7px);
+     margin-bottom: 100px;
+   }
+
+   body {
+     padding-top: 50px;
+   }
+
+   .logo {
+     font-size: 1.5em;
+   }
+
+   .navigation a {
+     margin-left: 8px;
+     font-size: 0.9em;
+   }
+
+   .container {
+     width: 50%;
+     height: auto;
+     min-height: 540px;
+     margin: 20px 0;
+   }
+
+   .container.active {
+     width: 50%;
+     height: 800px;
+     min-height: 600px;
+   }
+
+   .container .form-box {
+     padding: 20px;
+   }
+
+   .inner-register {
+     flex-direction: column;
+   }
+
+   .panel {
+     width: 100%;
+   }
+
+   /* Adjust form elements for mobile */
+   .input-box {
+     margin: 10px 0;
+   }
+
+   .remember-forgot {
+     display: flex;
+     justify-content: space-around;
+     margin-top: 17px;
+
+
+   }
+
+   .buttons {
+     flex-direction: column;
+     gap: 10px;
+   }
+
+   .buttons .btn {
+     width: 100%;
+   }
+
+   /* Adjust popup for mobile */
+   .popup {
+     width: 90%;
+     padding: 15px;
+   }
+ }
+
 
  /* For very small screens */
  @media (max-width: 480px) {
