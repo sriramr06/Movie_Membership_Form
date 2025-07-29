@@ -442,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (isValid) {
-      showPopup('Registration successful!');
+      showPopup('Account Created Successfully!');
       registerForm.reset();
       container.classList.remove('active');
       container.style.height = '';
